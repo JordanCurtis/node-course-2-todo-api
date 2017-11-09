@@ -9,7 +9,9 @@ const todos = [{
     text: "Sample todo1"
 }, {
     _id: new ObjectID(),
-    text: "Sample todo2"
+    text: "Sample todo2",
+    completed: true,
+    completedAT: 333
 }];
 beforeEach((done) => {
     Todo.remove({}).then(() => {
@@ -137,3 +139,42 @@ describe('DELETE /todos/:id', () =>{
     });
 
 });
+
+describe('PATCH /todos/:id', () =>{
+    it('should update the todo', (done) =>{
+        var hexId = todos[0]._id.toHexString();
+        var text = 'This should be new text';
+
+        request(app)
+        .patch(`/todos/${hexId}`)
+        .send({
+            completed: true,
+            text
+        })
+        .expect(200)
+        .expect((res) =>{
+            expect(res.body.todo.text).toBe(text);
+            expect(res.body.todo.completed).toBe(true);
+            expect(res.body.todo.completedAt).toBeA('number');
+        })
+        .end(done);
+    });
+    it('should clear completedAt when todo is not completed', (done) =>{
+        var hexId = todos[1]._id.toHexString();
+        var text = 'This should be the Alternate text';
+
+        request(app)
+        .patch(`/todos/${hexId}`)
+        .send({
+            completed: false,
+            text
+        })
+        .expect(200)
+        .expect((res) =>{
+            expect(res.body.todo.text).toBe(text);
+            expect(res.body.todo.completed).toBe(false);
+            expect(res.body.todo.completedAt).toNotExist();
+        })
+        .end(done);
+    });
+})
